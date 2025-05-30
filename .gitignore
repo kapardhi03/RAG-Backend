@@ -1,7 +1,11 @@
-/venv
-venv
+# Virtual environment
+venv/
 
+# Environment variable files
 .env
-.env.
 
+# macOS system files
 .DS_Store
+
+# Chroma DB directory
+chroma_db/
