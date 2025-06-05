@@ -42,7 +42,7 @@ beautifulsoup4==4.13.4
 html2text==2020.1.16
 lxml==5.4.0
 pymupdf==1.23.26
-unstructured==0.12.4
+unstructured
 
 # HTTP/Web
 aiohttp==3.11.18
