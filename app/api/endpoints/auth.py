@@ -2,14 +2,16 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import timedelta, datetime
-import jwt
+from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from app.core.config import settings
 from app.db.session import get_db
 from app.db.models import Tenant
+
+# Use custom JWT module instead of direct import
+from app.auth.jwt import create_access_token
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -30,21 +32,10 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=8, description="User password")
     name: str = Field(..., description="User name")
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """Create JWT access token"""
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
-    return encoded_jwt
-
 @router.post("/login", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)  # Get database session from dependency
+    db: AsyncSession = Depends(get_db)
 ):
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -58,8 +49,11 @@ async def login_for_access_token(
         
         if tenant and tenant.verify_password(form_data.password):
             logger.info(f"Password verification successful for: {form_data.username}")
+            
+            # Use custom JWT module for token creation
             access_token = create_access_token(
-                data={"sub": tenant.email, "tenant_id": str(tenant.id)}
+                tenant_id=tenant.id,
+                email=tenant.email
             )
             
             return {
@@ -113,9 +107,10 @@ async def register_user(
         
         logger.info(f"User {tenant.email} registered successfully with ID: {tenant.id}")
         
-        # Create token
+        # Create token using custom JWT module
         access_token = create_access_token(
-            data={"sub": tenant.email, "tenant_id": str(tenant.id)}
+            tenant_id=tenant.id,
+            email=tenant.email
         )
         
         return {

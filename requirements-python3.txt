@@ -17,12 +17,19 @@ bcrypt==4.3.0
 pydantic==2.11.4
 pydantic-settings==2.1.0
 pydantic_core==2.33.2
-pydantic_settings
 python-dotenv==1.1.0
 
+# LlamaIndex Core
+llama-index==0.10.25
+llama-index-core==0.10.25
+llama-index-embeddings-openai==0.1.7
+llama-index-llms-openai==0.1.15
+llama-index-vector-stores-chroma==0.1.7
+llama-index-readers-web==0.1.13
+llama-index-postprocessor-cohere-rerank==0.1.6
+
 # AI/Embeddings
-openai==0.28.1
-chromadb==1.0.9
+openai==1.12.0
 cohere==4.47
 
 # Semantic Text Processing
@@ -44,27 +51,19 @@ lxml==5.4.0
 pymupdf==1.23.26
 unstructured
 
-# HTTP/Web
-aiohttp==3.11.18
-httpx==0.28.1
-requests==2.32.3
-aiofiles==24.1.0
 # Advanced Web Scraping
 selenium==4.18.1
 playwright==1.42.0
 fake-useragent==1.5.1
 requests-html==0.10.0
 
+# HTTP/Web
+aiohttp==3.11.18
+httpx==0.28.1
+requests==2.32.3
+aiofiles==24.1.0
+
 # Utilities
 python-multipart==0.0.20
 tenacity==9.1.2
 tiktoken==0.6.0
-
-# LlamaIndex Core
-llama-index==0.10.25
-llama-index-core==0.10.25
-llama-index-embeddings-openai==0.1.7
-llama-index-llms-openai==0.1.15
-llama-index-vector-stores-chroma==0.1.7
-llama-index-readers-web==0.1.13
-llama-index-postprocessor-cohere-rerank==0.1.6

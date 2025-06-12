@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Dict, Any, Optional
 import logging
+import time
 
 from app.schemas.query import (
     QueryRequest, 

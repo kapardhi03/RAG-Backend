@@ -1,8 +1,7 @@
-# app/api/deps.py - Updated with new services
+# app/api/deps.py - Updated to use custom JWT module
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
-import jwt
 import uuid
 import logging
 import sys
@@ -11,6 +10,9 @@ from typing import Optional
 from app.db.session import get_db
 from app.db.models import Tenant
 from app.core.config import settings
+
+# Use custom JWT module instead of direct import
+from app.auth.jwt import decode_token, verify_tenant_access
 
 # Import new services
 from app.services.llamaindex.engine import LlamaIndexRAGEngine
@@ -47,7 +49,7 @@ async def get_current_tenant(
     db: AsyncSession = Depends(get_db)
 ) -> Tenant:
     """
-    Extract and validate tenant from JWT token
+    Extract and validate tenant from JWT token using custom JWT module
     Returns the Tenant object from the database
     """
     auth_logger.info("=== Authentication attempt started ===")
@@ -57,13 +59,9 @@ async def get_current_tenant(
         token = credentials.credentials
         auth_logger.info(f"Token received (first 10 chars): {token[:10]}...")
         
-        # Decode token
-        auth_logger.info("Attempting to decode JWT token...")
-        payload = jwt.decode(
-            token, 
-            settings.JWT_SECRET_KEY, 
-            algorithms=[settings.JWT_ALGORITHM]
-        )
+        # Decode token using custom JWT module
+        auth_logger.info("Attempting to decode JWT token using custom JWT module...")
+        payload = decode_token(token)
         auth_logger.info(f"Token decoded successfully. Claims: {payload}")
         
         # Extract tenant_id from token
@@ -92,6 +90,15 @@ async def get_current_tenant(
                 detail=f"Invalid tenant ID format: {str(e)}"
             )
         
+        # Verify tenant access using custom JWT module
+        has_access = verify_tenant_access(payload, tenant_id)
+        if not has_access:
+            auth_logger.error(f"Tenant access verification failed: {tenant_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied for this tenant"
+            )
+        
         # Get tenant from database
         auth_logger.info(f"Looking up tenant in database with ID: {tenant_id}")
         tenant = await db.get(Tenant, tenant_id)
@@ -115,18 +122,9 @@ async def get_current_tenant(
         auth_logger.info("=== Authentication successful ===")
         return tenant
         
-    except jwt.ExpiredSignatureError:
-        auth_logger.error("JWT token has expired")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired"
-        )
-    except jwt.InvalidTokenError as e:
-        auth_logger.error(f"Invalid JWT token: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid token: {str(e)}"
-        )
+    except HTTPException:
+        # Re-raise HTTPException as-is (they're already handled by custom JWT module)
+        raise
     except Exception as e:
         auth_logger.error(f"Authentication error: {str(e)}", exc_info=True)
         raise HTTPException(

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import KnowledgeBase, Document
 from app.api.deps import get_current_tenant
 from app.db.session import get_db
-from ...services.web_scraper.scraper import extract_all_urls
+from services.web_scraper.scraper import extract_all_urls
 import logging
 
 from app.schemas.knowledge_base import (

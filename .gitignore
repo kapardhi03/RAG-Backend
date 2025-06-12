@@ -9,3 +9,7 @@ venv/
 
 # Chroma DB directory
 chroma_db/
+
+# Python cache files
+__pycache__/
+*.py[cod]

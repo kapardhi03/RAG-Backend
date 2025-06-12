@@ -15,8 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.common.exceptions import TimeoutException, WebDriverException
-from fake_useragent import UserAgent
+from selenium.common.exceptions import TimeoutException
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -28,7 +27,6 @@ class AdvancedWebScraper:
     """Advanced web scraper with anti-blocking capabilities"""
     
     def __init__(self):
-        self.user_agent = UserAgent()
         self.session = self._create_session()
         self.driver = None
         self.proxy_list = settings.PROXY_LIST if settings.USE_PROXY else []
