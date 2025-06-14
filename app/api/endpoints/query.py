@@ -29,6 +29,7 @@ from app.core.logging import log_rag_query
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.post("/{kb_id}/advanced", response_model=AdvancedQueryResponse)
 async def advanced_query(
     kb_id: str,
@@ -73,21 +74,21 @@ async def advanced_query(
             execution_time_ms=int(result.processing_time * 1000)
         )
         
-        # Format response
+        # Format response - FIXED: Use model_config_used instead of model_config
         return AdvancedQueryResponse(
             query=result.query_context.query,
             answer=result.answer,
             sources=result.sources,
             confidence_score=result.confidence_score,
             processing_time=result.processing_time,
-            query_analysis={
-                "intent": result.query_context.intent,
-                "keywords": result.query_context.keywords,
-                "entities": result.query_context.entities,
-                "expansion_terms": result.query_context.expansion_terms,
-                "filters_applied": result.query_context.filters
-            },
-            model_config=model_config,
+            query_analysis=QueryAnalysis(
+                intent=result.query_context.intent,
+                keywords=result.query_context.keywords,
+                entities=result.query_context.entities,
+                expansion_terms=result.query_context.expansion_terms,
+                filters_applied=result.query_context.filters
+            ),
+            model_config_used=model_config,  # Fixed field name
             metadata=result.metadata
         )
         
@@ -144,13 +145,13 @@ async def batch_query(
         # Format results
         query_results = []
         for result in results:
-            query_results.append({
-                "query": result.query_context.query,
-                "answer": result.answer,
-                "sources": result.sources[:5],  # Limit sources for batch response
-                "confidence_score": result.confidence_score,
-                "processing_time": result.processing_time
-            })
+            query_results.append(BatchQueryResult(
+                query=result.query_context.query,
+                answer=result.answer,
+                sources=result.sources[:5],  # Limit sources for batch response
+                confidence_score=result.confidence_score,
+                processing_time=result.processing_time
+            ))
         
         # Log batch operation
         for result in results:
@@ -165,7 +166,7 @@ async def batch_query(
             results=query_results,
             total_queries=len(batch_request.queries),
             successful_queries=len([r for r in results if r.confidence_score > 0.3]),
-            model_config=model_config
+            model_config_used=model_config  # Fixed field name
         )
         
     except HTTPException:
@@ -176,7 +177,8 @@ async def batch_query(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Batch query failed: {str(e)}"
         )
-
+    
+    
 @router.post("/{kb_id}/explain", response_model=QueryExplanationResponse)
 async def explain_query(
     kb_id: str,

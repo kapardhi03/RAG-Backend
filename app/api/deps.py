@@ -16,7 +16,7 @@ from app.auth.jwt import decode_token, verify_tenant_access
 
 # Import new services
 from app.services.llamaindex.engine import LlamaIndexRAGEngine
-from app.services.document_processor.processor import EnhancedDocumentProcessor
+from app.services.document_processor.processor import DocumentProcessor
 from app.services.web_scraper.scraper import AdvancedWebScraper
 from app.services.query.engine import AdvancedQueryEngine
 from app.services.storage.s3 import S3Storage
@@ -39,7 +39,7 @@ security = HTTPBearer()
 
 # Global service instances (initialized once)
 _rag_engine: Optional[LlamaIndexRAGEngine] = None
-_document_processor: Optional[EnhancedDocumentProcessor] = None
+_document_processor: Optional[DocumentProcessor] = None
 _query_engine: Optional[AdvancedQueryEngine] = None
 _web_scraper: Optional[AdvancedWebScraper] = None
 _s3_storage: Optional[S3Storage] = None
@@ -154,7 +154,7 @@ def get_rag_engine(
     
     return _rag_engine
 
-def get_document_processor() -> EnhancedDocumentProcessor:
+def get_document_processor() -> DocumentProcessor:
     """Get or create enhanced document processor instance"""
     global _document_processor, _rag_engine
     
@@ -163,7 +163,7 @@ def get_document_processor() -> EnhancedDocumentProcessor:
         if _rag_engine is None:
             _rag_engine = get_rag_engine()
         
-        _document_processor = EnhancedDocumentProcessor(rag_engine=_rag_engine)
+        _document_processor = DocumentProcessor(rag_engine=_rag_engine)
     
     return _document_processor
 

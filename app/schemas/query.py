@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Any, Optional
 
 # Legacy schemas for backward compatibility
@@ -8,14 +8,15 @@ class QueryRequest(BaseModel):
     top_k: Optional[int] = Field(5, description="Number of results to return")
     filter: Optional[Dict[str, Any]] = Field(None, description="Filter criteria for documents")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "query": "What is the main feature of the product?",
                 "top_k": 3,
                 "filter": {"source_type": "documentation"}
             }
         }
+    )
 
 class QueryResponseItem(BaseModel):
     """Schema for an individual query result"""
@@ -46,8 +47,8 @@ class AdvancedQueryRequest(BaseModel):
     enable_query_expansion: Optional[bool] = Field(None, description="Enable/disable query expansion")
     similarity_threshold: Optional[float] = Field(0.3, description="Minimum similarity threshold")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "query": "How does the system handle authentication?",
                 "top_k": 10,
@@ -57,6 +58,7 @@ class AdvancedQueryRequest(BaseModel):
                 "filters": {"document_type": "technical"}
             }
         }
+    )
 
 class QueryAnalysis(BaseModel):
     """Schema for query analysis results"""
@@ -83,7 +85,7 @@ class AdvancedQueryResponse(BaseModel):
     confidence_score: float = Field(..., description="Overall confidence score")
     processing_time: float = Field(..., description="Processing time in seconds")
     query_analysis: QueryAnalysis = Field(..., description="Query analysis results")
-    model_config: Dict[str, str] = Field(..., description="Models used for processing")
+    model_config_used: Dict[str, str] = Field(..., description="Models used for processing")
     metadata: Dict[str, Any] = Field(..., description="Additional processing metadata")
 
 class BatchQueryRequest(BaseModel):
@@ -93,8 +95,8 @@ class BatchQueryRequest(BaseModel):
     llm_model: Optional[str] = Field(None, description="LLM model to use")
     max_concurrent: Optional[int] = Field(3, description="Maximum concurrent queries")
     
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "queries": [
                     "What are the system requirements?",
@@ -105,6 +107,7 @@ class BatchQueryRequest(BaseModel):
                 "max_concurrent": 3
             }
         }
+    )
 
 class BatchQueryResult(BaseModel):
     """Schema for individual batch query result"""
@@ -119,7 +122,7 @@ class BatchQueryResponse(BaseModel):
     results: List[BatchQueryResult] = Field(..., description="Batch query results")
     total_queries: int = Field(..., description="Total number of queries")
     successful_queries: int = Field(..., description="Number of successful queries")
-    model_config: Dict[str, str] = Field(..., description="Models used for processing")
+    model_config_used: Dict[str, str] = Field(..., description="Models used for processing")
 
 class QueryExplanationResponse(BaseModel):
     """Schema for query explanation response"""

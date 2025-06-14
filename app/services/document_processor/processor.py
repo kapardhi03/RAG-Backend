@@ -29,7 +29,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-class EnhancedDocumentProcessor:
+class DocumentProcessor:
     """Enhanced document processor with LlamaIndex integration and advanced chunking"""
     
     def __init__(self, rag_engine: Optional[LlamaIndexRAGEngine] = None):
