@@ -3,17 +3,18 @@ from typing import List
 from uuid import  UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import KnowledgeBase, Document
-from app.api.deps import get_current_tenant
+from app.api.deps import get_current_tenant, get_web_scraper
 from app.db.session import get_db
-from services.web_scraper.scraper import extract_all_urls
+from app.utils.url_utils import extract_all_urls  # Fixed import to use utils directory
 import logging
 
 from app.schemas.knowledge_base import (
     KnowledgeBaseCreate, 
     KnowledgeBaseRead, 
     DocumentRead,
+    URLSitemapResponse,  # Add this schema
+    URLSubmit  # Add this schema
 )
-from app.api.deps import get_current_tenant
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -54,40 +55,48 @@ async def create_knowledge_base(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to create knowledge base: {str(e)}"
         )
-            
-@router.post("/get-sitemap", response_model=List[str])
-async def get_sitemap_urls(url: str):
+
+@router.post("/extract-sitemap", response_model=URLSitemapResponse)
+async def extract_sitemap_urls(
+    url_data: URLSubmit,
+    tenant = Depends(get_current_tenant)
+):
     """
-    Extract all unique URLs from a website.
+    Extract all unique URLs from a website using advanced scraping.
     
-    Args:
-        url: The website URL to crawl
-        
-    Returns:
-        List of unique URLs found on the website
+    This endpoint combines multiple URL discovery methods:
+    - Sitemap.xml parsing
+    - robots.txt analysis  
+    - Intelligent crawling with link discovery
     """
     try:
-        if not url:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="URL is required"
-            )
+        url = str(url_data.url)
+        logger.info(f"Starting URL extraction for: {url}")
         
-        urls = extract_all_urls(url)
-        return urls
+        # Use the extract_all_urls function from utils
+        urls = await extract_all_urls(
+            base_url=url,
+            max_urls=500,
+            include_crawling=True,
+            same_domain_only=True
+        )
+        
+        logger.info(f"URL extraction completed. Found {len(urls)} unique URLs")
+        
+        return URLSitemapResponse(urls=urls)
         
     except Exception as e:
-        logger.error(f"Failed to retrieve URLs: {str(e)}")
+        logger.error(f"Failed to extract URLs from {url}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve URLs: {str(e)}"
+            detail=f"Failed to extract URLs: {str(e)}"
         )
-    
+
 @router.get("/{kb_id}", response_model=List[DocumentRead])
 async def get_all_files_in_kb(
     kb_id: str,
     tenant = Depends(get_current_tenant),
-    db: AsyncSession = Depends(get_db)  # Add database dependency
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all files in a knowledge base"""
     try:
@@ -130,13 +139,12 @@ async def get_all_files_in_kb(
 @router.get("/", response_model=List[KnowledgeBaseRead])
 async def get_knowledge_bases(
     tenant = Depends(get_current_tenant),
-    db: AsyncSession = Depends(get_db)  # Add database dependency
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all knowledge bases for a tenant"""
     try:
         # Get all knowledge bases for the tenant from database
         knowledge_bases = await KnowledgeBase.get_by_tenant(tenant.id, db)
-
         
         # Convert to response format
         result = []
@@ -161,7 +169,7 @@ async def get_knowledge_bases(
         
         return result
     except Exception as e:
-        logger.error(f"Failed to get knowledge bases for tenant {tenant_id}: {str(e)}")
+        logger.error(f"Failed to get knowledge bases for tenant {tenant.id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve knowledge bases: {str(e)}"

@@ -9,19 +9,61 @@ import json
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.common.exceptions import TimeoutException
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# Import fake-useragent with fallback
+try:
+    from fake_useragent import UserAgent
+    HAS_USER_AGENT = True
+except ImportError:
+    HAS_USER_AGENT = False
+    import warnings
+    warnings.warn("fake-useragent not installed. Using fallback user agents.")
+
+# Try to import Selenium components (optional)
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.chrome.options import Options as ChromeOptions
+    from selenium.webdriver.firefox.options import Options as FirefoxOptions
+    from selenium.common.exceptions import TimeoutException
+    HAS_SELENIUM = True
+except ImportError:
+    HAS_SELENIUM = False
+    warnings.warn("Selenium not installed. Advanced scraping features will be limited.")
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+class FallbackUserAgent:
+    """Fallback user agent handler when fake-useragent is not available"""
+    
+    def __init__(self):
+        self.agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0'
+        ]
+        self._index = 0
+    
+    @property
+    def random(self):
+        import random
+        return random.choice(self.agents)
+    
+    @property
+    def chrome(self):
+        return self.agents[0]
+    
+    @property
+    def firefox(self):
+        return self.agents[3]
 
 class AdvancedWebScraper:
     """Advanced web scraper with anti-blocking capabilities"""
@@ -29,8 +71,20 @@ class AdvancedWebScraper:
     def __init__(self):
         self.session = self._create_session()
         self.driver = None
-        self.proxy_list = settings.PROXY_LIST if settings.USE_PROXY else []
+        self.proxy_list = getattr(settings, 'PROXY_LIST', []) if hasattr(settings, 'USE_PROXY') and settings.USE_PROXY else []
         self.current_proxy_index = 0
+        
+        # Initialize user agent handler
+        if HAS_USER_AGENT:
+            try:
+                self.user_agent = UserAgent()
+                logger.info("Initialized UserAgent successfully")
+            except Exception as e:
+                logger.warning(f"Failed to initialize UserAgent: {e}")
+                self.user_agent = FallbackUserAgent()
+        else:
+            self.user_agent = FallbackUserAgent()
+            logger.info("Using fallback user agent")
         
         # Rate limiting
         self.request_delay = (1, 3)  # Random delay between requests
@@ -43,8 +97,9 @@ class AdvancedWebScraper:
         session = requests.Session()
         
         # Retry strategy
+        max_retries = getattr(settings, 'MAX_RETRIES', 3)
         retry_strategy = Retry(
-            total=settings.MAX_RETRIES,
+            total=max_retries,
             status_forcelist=[429, 500, 502, 503, 504],
             backoff_factor=1,
             allowed_methods=["HEAD", "GET", "OPTIONS"]
@@ -101,11 +156,13 @@ class AdvancedWebScraper:
             await self._rate_limit()
             
             headers = self._get_random_headers()
-            proxies = self._get_proxy() if settings.USE_PROXY else None
+            proxies = self._get_proxy() if hasattr(settings, 'USE_PROXY') and settings.USE_PROXY else None
+            
+            timeout = getattr(settings, 'SCRAPING_TIMEOUT', 30)
             
             async with aiohttp.ClientSession(
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=settings.SCRAPING_TIMEOUT),
+                timeout=aiohttp.ClientTimeout(total=timeout),
                 connector=aiohttp.TCPConnector(ssl=False) if proxies else None
             ) as session:
                 
@@ -125,8 +182,12 @@ class AdvancedWebScraper:
             logger.error(f"Requests scraping failed for {url}: {e}")
             return None
     
-    def _setup_selenium_driver(self, headless: bool = True) -> webdriver.Chrome:
+    def _setup_selenium_driver(self, headless: bool = True) -> Optional[webdriver.Chrome]:
         """Setup Selenium WebDriver with anti-detection measures"""
+        if not HAS_SELENIUM:
+            logger.error("Selenium not available")
+            return None
+        
         try:
             chrome_options = ChromeOptions()
             
@@ -142,13 +203,12 @@ class AdvancedWebScraper:
             chrome_options.add_argument('--disable-extensions')
             chrome_options.add_argument('--disable-plugins')
             chrome_options.add_argument('--disable-images')
-            chrome_options.add_argument('--disable-javascript')  # Can be removed if JS is needed
             
             # Random user agent
             chrome_options.add_argument(f'--user-agent={self.user_agent.chrome}')
             
             # Proxy support
-            if settings.USE_PROXY and self.proxy_list:
+            if hasattr(settings, 'USE_PROXY') and settings.USE_PROXY and self.proxy_list:
                 proxy = self.proxy_list[self.current_proxy_index]
                 chrome_options.add_argument(f'--proxy-server={proxy}')
             
@@ -165,15 +225,22 @@ class AdvancedWebScraper:
             
         except Exception as e:
             logger.error(f"Failed to setup Selenium driver: {e}")
-            raise
+            return None
     
     async def scrape_with_selenium(self, url: str, wait_for_element: str = None) -> Optional[str]:
         """Scrape using Selenium for JavaScript-heavy sites"""
+        if not HAS_SELENIUM:
+            logger.warning("Selenium not available, falling back to requests")
+            return await self.scrape_with_requests(url)
+        
         driver = None
         try:
             await self._rate_limit()
             
             driver = self._setup_selenium_driver()
+            if not driver:
+                return None
+            
             driver.get(url)
             
             # Wait for specific element if provided
@@ -471,9 +538,45 @@ class AdvancedWebScraper:
         
         return urls
     
-    def __del__(self):
+    def cleanup(self):
         """Cleanup resources"""
-        if hasattr(self, 'session'):
-            self.session.close()
-        if hasattr(self, 'driver') and self.driver:
-            self.driver.quit()
+        try:
+            if hasattr(self, 'session'):
+                self.session.close()
+            if hasattr(self, 'driver') and self.driver:
+                self.driver.quit()
+        except Exception as e:
+            logger.warning(f"Error during cleanup: {e}")
+    
+    def __del__(self):
+        """Cleanup resources on deletion"""
+        try:
+            self.cleanup()
+        except Exception:
+            pass  # Ignore errors during cleanup
+
+
+# Simple function for backward compatibility
+async def extract_all_urls(base_url: str) -> List[str]:
+    """
+    Simple function to extract URLs from a website.
+    This is for backward compatibility with existing code.
+    """
+    scraper = AdvancedWebScraper()
+    try:
+        # Try sitemap first
+        urls = await scraper.discover_sitemap_urls(base_url)
+        
+        # If not many URLs found, try crawling
+        if len(urls) < 10:
+            crawl_results = await scraper.smart_crawl(base_url, max_pages=20)
+            urls.extend(crawl_results.keys())
+        
+        # Remove duplicates and return
+        return list(set(urls))
+    
+    except Exception as e:
+        logger.error(f"Error extracting URLs: {e}")
+        raise
+    finally:
+        scraper.cleanup()
