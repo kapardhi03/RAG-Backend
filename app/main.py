@@ -10,7 +10,6 @@ from app.api.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.deps import cleanup_services, get_rag_engine, get_document_processor
-
 # Initialize logging first
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -69,7 +68,7 @@ async def startup_event():
         logger.info(f"Advanced Scraping: {settings.ENABLE_ADVANCED_SCRAPING}")
         logger.info("=============================")
         
-        logger.info("🚀 Application startup completed successfully")
+        logger.info("Application startup completed successfully")
         
     except Exception as e:
         logger.error(f" Error during startup: {str(e)}")
