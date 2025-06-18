@@ -1,28 +1,31 @@
-# app/services/embedding/openai_fixed.py - Compatibility fix for older OpenAI versions
+# app/services/embedding/openai.py - Fixed for OpenAI v1.x compatibility
 import logging
 import os
-import openai
+import asyncio
 from typing import List, Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential, before_sleep_log
+
+# Use new OpenAI client (v1.x)
+from openai import AsyncOpenAI
 
 # Setup logging
 logger = logging.getLogger("embedding_service")
 
 class OpenAIEmbedding:
     def __init__(self, api_key: str = None, model: str = "text-embedding-ada-002", chat_model: str = "gpt-3.5-turbo"):
-        """Initialize OpenAI embedding service"""
+        """Initialize OpenAI embedding service with v1.x client"""
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         
         if not self.api_key:
             raise ValueError("OpenAI API key is required")
         
-        # Set the API key directly for v0.28 style
-        openai.api_key = self.api_key
+        # Initialize the new OpenAI client
+        self.client = AsyncOpenAI(api_key=self.api_key)
         
         self.model = model
         self.chat_model = chat_model
         self.logger = logging.getLogger("embedding_service")
-        self.logger.info(f"OpenAI service initialized with old API")
+        self.logger.info(f"OpenAI service initialized with new API v1.x")
     
     @retry(
         stop=stop_after_attempt(3),
@@ -30,18 +33,18 @@ class OpenAIEmbedding:
         before_sleep=before_sleep_log(logger, logging.WARNING),
     )
     async def _embed_batch(self, batch: List[str]) -> List[List[float]]:
-        """Generate embeddings for a batch of texts using OpenAI API"""
+        """Generate embeddings for a batch of texts using OpenAI API v1.x"""
         try:
             self.logger.info(f"Generating embeddings for batch of {len(batch)} texts")
             
-            # Call OpenAI API using v0.28 style syntax
-            response = await openai.Embedding.acreate(
+            # Use new API syntax
+            response = await self.client.embeddings.create(
                 model=self.model,
                 input=batch
             )
             
-            # Extract embeddings from response (v0.28 style)
-            embeddings = [data["embedding"] for data in response["data"]]
+            # Extract embeddings from response
+            embeddings = [item.embedding for item in response.data]
             
             self.logger.info(f"Successfully generated {len(embeddings)} embeddings")
             return embeddings
@@ -80,14 +83,14 @@ class OpenAIEmbedding:
         try:
             self.logger.info(f"Generating embedding for query")
             
-            # Call OpenAI API (v0.28 style)
-            response = await openai.Embedding.acreate(
+            # Use new API syntax
+            response = await self.client.embeddings.create(
                 model=self.model,
                 input=[query]
             )
             
-            # Extract embedding from response (v0.28 style)
-            embedding = response["data"][0]["embedding"]
+            # Extract embedding from response
+            embedding = response.data[0].embedding
             
             self.logger.info(f"Successfully generated query embedding")
             return embedding
@@ -153,7 +156,7 @@ Please answer the question using only the information provided in the context ab
         kb_id: str,
         max_tokens: int = 1500
     ) -> str:
-        """Generate an answer using the older OpenAI API"""
+        """Generate an answer using the new OpenAI API"""
         try:
             # Check if we have any context at all
             if not context or context.strip() == "":
@@ -170,8 +173,8 @@ Please answer the question using only the information provided in the context ab
             if intent_info.get("is_summary_request"):
                 temperature = 0.2
             
-            # Generate response using old API
-            response = await openai.ChatCompletion.acreate(
+            # Generate response using new API
+            response = await self.client.chat.completions.create(
                 model=self.chat_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
@@ -182,7 +185,7 @@ Please answer the question using only the information provided in the context ab
                 top_p=0.9
             )
             
-            answer = response['choices'][0]['message']['content'].strip()
+            answer = response.choices[0].message.content.strip()
             
             # Post-process the answer
             answer = self._post_process_answer(answer, intent_info, relevance_info)
@@ -206,7 +209,6 @@ Please answer the question using only the information provided in the context ab
             "i don't have", "i cannot find", "i couldn't find", "not mentioned",
             "doesn't contain", "does not contain", "no information",
             "not provided", "not available", "cannot determine"
-            "I don't have specific information about that topic in the available documents."
         ]
         
         answer_lower = answer.lower()
