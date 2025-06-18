@@ -173,7 +173,7 @@ class Settings:
 # Create settings instance with proper error handling
 try:
     settings = Settings()
-    print("✅ Settings loaded successfully")
+    print("Settings loaded successfully")
     
     # Warning messages for missing critical settings
     if not settings.OPENAI_API_KEY:
@@ -187,12 +187,12 @@ try:
     print(f"🔧 Environment: {settings.ENVIRONMENT}")
     print(f"🤖 Default embedding model: {settings.DEFAULT_EMBEDDING_MODEL}")
     print(f"🧠 Default LLM model: {settings.DEFAULT_LLM_MODEL}")
-    print(f"🔍 Semantic chunking: {'✅' if settings.ENABLE_SEMANTIC_CHUNKING else '❌'}")
-    print(f"🔄 Hybrid search: {'✅' if settings.ENABLE_HYBRID_SEARCH else '❌'}")
-    print(f"📈 Query expansion: {'✅' if settings.ENABLE_QUERY_EXPANSION else '❌'}")
-    print(f"🎯 Reranking: {'✅' if settings.ENABLE_RERANKING else '❌'}")
+    print(f"🔍 Semantic chunking: {'✅' if settings.ENABLE_SEMANTIC_CHUNKING else ''}")
+    print(f"🔄 Hybrid search: {'✅' if settings.ENABLE_HYBRID_SEARCH else ''}")
+    print(f"📈 Query expansion: {'✅' if settings.ENABLE_QUERY_EXPANSION else ''}")
+    print(f"🎯 Reranking: {'✅' if settings.ENABLE_RERANKING else ''}")
     
 except Exception as e:
-    print(f"❌ Critical error loading settings: {e}")
+    print(f" Critical error loading settings: {e}")
     print("Please check your .env file and fix the configuration.")
     raise
