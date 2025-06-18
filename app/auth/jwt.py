@@ -1,9 +1,21 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Union
-import jwt
-from uuid import UUID, uuid4
+import uuid
+from uuid import UUID
 from fastapi import HTTPException, status
 import logging
+
+# Explicit PyJWT import with error handling
+try:
+    import jwt as pyjwt
+    # Verify this is PyJWT and not python-jwt
+    if not hasattr(pyjwt, 'encode') or not hasattr(pyjwt, 'decode'):
+        raise ImportError("Wrong JWT library detected")
+    print(f"Using PyJWT version: {pyjwt.__version__}")
+except ImportError as e:
+    print(f"JWT Import Error: {e}")
+    print("Please run: pip uninstall python-jwt jwt PyJWT -y && pip install PyJWT==2.10.1")
+    raise
 
 from app.core.config import settings
 
@@ -32,40 +44,42 @@ def create_access_token(
     Returns:
         JWT token string
     """
-    # Convert tenant_id to string if it's a UUID
-    str_tenant_id = str(tenant_id)
-    
-    expire = datetime.utcnow() + (
-        expires_delta if expires_delta 
-        else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    
-    to_encode = {
-        "sub": email,  # Subject (standard JWT claim)
-        "tenant_id": str_tenant_id,
-        "email": email,
-        "exp": expire,
-        "iat": datetime.utcnow(),
-        "jti": str(uuid4()),  # JWT ID - unique identifier for this token
-        "type": "access_token"
-    }
-    
-    # Add any additional claims
-    if additional_claims:
-        to_encode.update(additional_claims)
-    
     try:
-        encoded_jwt = jwt.encode(
+        # Convert tenant_id to string if it's a UUID
+        str_tenant_id = str(tenant_id)
+        
+        expire = datetime.utcnow() + (
+            expires_delta if expires_delta 
+            else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        
+        to_encode = {
+            "sub": email,  # Subject (standard JWT claim)
+            "tenant_id": str_tenant_id,
+            "email": email,
+            "exp": expire,
+            "iat": datetime.utcnow(),
+            "jti": str(uuid.uuid4()),  # JWT ID - unique identifier for this token
+            "type": "access_token"
+        }
+        
+        # Add any additional claims
+        if additional_claims:
+            to_encode.update(additional_claims)
+        
+        # Create JWT token using PyJWT
+        encoded_jwt = pyjwt.encode(
             to_encode, 
             SECRET_KEY, 
             algorithm=ALGORITHM
         )
         
-        logger.info(f"JWT token created for tenant {str_tenant_id} with expiry {expire}")
+        logger.info(f"JWT token created successfully for tenant {str_tenant_id}")
         return encoded_jwt
         
     except Exception as e:
         logger.error(f"Error creating JWT token: {str(e)}")
+        logger.error(f"PyJWT available methods: {[method for method in dir(pyjwt) if not method.startswith('_')]}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create authentication token"
@@ -85,7 +99,7 @@ def decode_token(token: str) -> Dict[str, Any]:
         HTTPException: If token is invalid
     """
     try:
-        payload = jwt.decode(
+        payload = pyjwt.decode(
             token, 
             SECRET_KEY, 
             algorithms=[ALGORITHM]
@@ -103,14 +117,14 @@ def decode_token(token: str) -> Dict[str, Any]:
         logger.debug(f"Token decoded successfully for tenant: {payload.get('tenant_id')}")
         return payload
         
-    except jwt.ExpiredSignatureError:
+    except pyjwt.ExpiredSignatureError:
         logger.warning("Attempt to use expired JWT token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except jwt.InvalidTokenError as e:
+    except pyjwt.InvalidTokenError as e:
         logger.warning(f"Invalid JWT token: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -212,12 +226,12 @@ def create_refresh_token(
         "email": email,
         "exp": expire,
         "iat": datetime.utcnow(),
-        "jti": str(uuid4()),
+        "jti": str(uuid.uuid4()),
         "type": "refresh_token"
     }
     
     try:
-        encoded_jwt = jwt.encode(
+        encoded_jwt = pyjwt.encode(
             to_encode, 
             SECRET_KEY, 
             algorithm=ALGORITHM
@@ -270,11 +284,11 @@ def is_token_expired(token: str) -> bool:
         True if token is expired, False otherwise
     """
     try:
-        jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        pyjwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return False
-    except jwt.ExpiredSignatureError:
+    except pyjwt.ExpiredSignatureError:
         return True
-    except jwt.InvalidTokenError:
+    except pyjwt.InvalidTokenError:
         return True  # Consider invalid tokens as expired
 
 def get_token_expiry(token: str) -> Optional[datetime]:
@@ -288,7 +302,7 @@ def get_token_expiry(token: str) -> Optional[datetime]:
         Expiry datetime or None if token is invalid
     """
     try:
-        payload = jwt.decode(
+        payload = pyjwt.decode(
             token, 
             SECRET_KEY, 
             algorithms=[ALGORITHM],
@@ -298,7 +312,7 @@ def get_token_expiry(token: str) -> Optional[datetime]:
         if exp_timestamp:
             return datetime.fromtimestamp(exp_timestamp)
         return None
-    except jwt.InvalidTokenError:
+    except pyjwt.InvalidTokenError:
         return None
 
 def create_token_pair(

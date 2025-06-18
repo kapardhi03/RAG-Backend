@@ -72,7 +72,7 @@ async def startup_event():
         logger.info("🚀 Application startup completed successfully")
         
     except Exception as e:
-        logger.error(f"❌ Error during startup: {str(e)}")
+        logger.error(f" Error during startup: {str(e)}")
         raise
 
 @app.on_event("shutdown")
@@ -88,7 +88,7 @@ async def shutdown_event():
         logger.info("👋 Application shutdown completed")
         
     except Exception as e:
-        logger.error(f"❌ Error during shutdown: {str(e)}")
+        logger.error(f" Error during shutdown: {str(e)}")
 
 # Add global exception handler
 @app.exception_handler(Exception)

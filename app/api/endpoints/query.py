@@ -30,6 +30,8 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+
+
 @router.post("/{kb_id}/advanced", response_model=AdvancedQueryResponse)
 async def advanced_query(
     kb_id: str,
@@ -178,7 +180,7 @@ async def batch_query(
             detail=f"Batch query failed: {str(e)}"
         )
     
-    
+
 @router.post("/{kb_id}/explain", response_model=QueryExplanationResponse)
 async def explain_query(
     kb_id: str,
