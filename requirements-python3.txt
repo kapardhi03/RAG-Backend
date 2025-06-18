@@ -19,22 +19,21 @@ pydantic-settings==2.1.0
 pydantic_core==2.33.2
 python-dotenv==1.1.0
 
-# LlamaIndex Core
-llama-index==0.10.25
-llama-index-core==0.10.25
-llama-index-embeddings-openai==0.1.7
-llama-index-llms-openai==0.1.15
-llama-index-vector-stores-chroma==0.1.7
-llama-index-readers-web==0.1.13
-llama-index-postprocessor-cohere-rerank==0.1.6
+# OpenAI - Fixed to compatible version
+openai==1.54.0
 
-# AI/Embeddings
-openai==1.12.0
-cohere==4.47
+# LlamaIndex - Compatible versions
+llama-index==0.11.20
+llama-index-core==0.11.20
+llama-index-embeddings-openai==0.2.5
+llama-index-llms-openai==0.2.9
+llama-index-vector-stores-chroma==0.2.0
+llama-index-readers-web==0.2.6
+
+# Cohere for reranking
+cohere==5.11.0
 
 # Semantic Text Processing
-nltk==3.8.1
-spacy==3.7.4
 sentence-transformers==2.2.2
 
 # AWS S3
@@ -48,14 +47,9 @@ python-docx==1.1.2
 beautifulsoup4==4.13.4
 html2text==2020.1.16
 lxml==5.4.0
-pymupdf==1.23.26
-unstructured
 
-# Advanced Web Scraping
-selenium==4.18.1
-playwright==1.42.0
-fake-useragent==1.5.1
-requests-html==0.10.0
+# ChromaDB
+chromadb==0.5.20
 
 # HTTP/Web
 aiohttp==3.11.18
@@ -63,7 +57,13 @@ httpx==0.28.1
 requests==2.32.3
 aiofiles==24.1.0
 
+# Redis for queues
+redis==5.0.1
+
 # Utilities
 python-multipart==0.0.20
 tenacity==9.1.2
 tiktoken==0.6.0
+
+# Optional advanced scraping (mark as optional since not all may be needed)
+fake-useragent==1.5.1
