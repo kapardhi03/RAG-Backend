@@ -154,3 +154,4 @@ app/api/.DS_Store
 app/api/.DS_Store
 *.pyc
 app/api/endpoints/__pycache__/query.cpython-312.pyc
+app/__pycache__/main.cpython-312.pyc
