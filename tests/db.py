@@ -78,9 +78,9 @@ async def main():
     
     print("=" * 50)
     if success1 and success2 and success3:
-        print("🎉 All tests passed! Your PostgreSQL setup is working correctly.")
+        print("All tests passed! Your PostgreSQL setup is working correctly.")
     else:
-        print("❌ Some tests failed. Please check the error messages above.")
+        print("Some tests failed. Please check the error messages above.")
 
 if __name__ == "__main__":
     asyncio.run(main())

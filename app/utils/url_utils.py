@@ -299,7 +299,8 @@ async def extract_all_urls(
     max_urls: int = 100,  # Reduced default
     include_crawling: bool = True,
     same_domain_only: bool = True,
-    timeout: int = 60  # Add timeout parameter
+    timeout: int = 60,  # Add timeout parameter
+    limit: int = 500,
 ) -> List[str]:
     """
     Fast URL extraction with timeouts and concurrent processing.
@@ -353,7 +354,7 @@ async def extract_all_urls(
                     max_urls=max_urls
                 )
                 
-                return filtered_urls
+                return filtered_urls[:limit]
         
         # Run with timeout
         result = await asyncio.wait_for(extract_with_timeout(), timeout=timeout)

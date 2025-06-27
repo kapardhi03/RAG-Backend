@@ -1,0 +1,51 @@
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir core
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd core
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch base_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch correctness_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch faithful_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch relevance_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch guideline_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch pairwaise_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch embedding_similarity_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch retrieval_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch benchmark_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % touch prometheus_evaluator.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air core % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir runner
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd runner
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air runner % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air runner % touch evaluation_runner.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air runner % touch batch_evaluation.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air runner % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir interface
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd interface
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air interface % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air interface % touch cli.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air interface % touch web_interface.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air interface % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir examples
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd examples
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air examples % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air examples % touch basic_usage.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air examples % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % touch setup.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir config
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd config
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air config % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air config % touch settings.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air config % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir utils
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd utils
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air utils % touch __init__.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air utils % touch data_utils.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air utils % touch metrics_utils.py
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air utils % cd ..
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % README.MD
+zsh: command not found: README.MD
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % touch README.MD
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % mkdir intergration
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % cd integration
+cd: no such file or directory: integration
+(.venv) kapardhikannekanti@kapardhis-MacBook-Air RAG-Evaluation % touch rag_system_evaluato
+r.py

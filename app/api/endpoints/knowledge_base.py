@@ -59,7 +59,8 @@ async def create_knowledge_base(
 @router.post("/extract-sitemap", response_model=URLSitemapResponse)
 async def extract_sitemap_urls(
     url_data: URLSubmit,
-    tenant = Depends(get_current_tenant)
+    tenant = Depends(get_current_tenant),
+    limit: int = 500,
 ):
     """
     Extract all unique URLs from a website using advanced scraping.
@@ -78,7 +79,8 @@ async def extract_sitemap_urls(
             base_url=url,
             max_urls=500,
             include_crawling=True,
-            same_domain_only=True
+            same_domain_only=True,
+            limit = limit,
         )
         
         logger.info(f"URL extraction completed. Found {len(urls)} unique URLs")
