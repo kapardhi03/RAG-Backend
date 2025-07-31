@@ -24,9 +24,9 @@ router = APIRouter()
 
 DOCUMENT_STATUS_PENDING = "pending"
 DOCUMENT_STATUS_PROCESSING = "processing"
-DOCUMENT_STATUS_COMPLETED = "completed"  # This exists in your enum
-DOCUMENT_STATUS_ERROR = "error"  # This exists in your enum
-DOCUMENT_STATUS_PROCESSED = "processed"  # This exists in your enum
+DOCUMENT_STATUS_COMPLETED = "completed"
+DOCUMENT_STATUS_ERROR = "error"
+DOCUMENT_STATUS_PROCESSED = "processed"
 
 logger = logging.getLogger("s3_storage")
 logger.setLevel(logging.DEBUG)
