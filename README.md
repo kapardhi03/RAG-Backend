@@ -13,7 +13,7 @@ FastAPI-based RAG system with ChromaDB, OpenAI, PostgreSQL, and AWS S3 for docum
 
 ### 1. Clone Repository
 ```bash
-git clone https://gitlab.aveosoft.com/ai-product/rag-module.git
+git clone https://github.com/kapardhi03/RAG-Backend.git
 cd rag-microservices
 ```
 
