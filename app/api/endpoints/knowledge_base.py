@@ -12,8 +12,8 @@ from app.schemas.knowledge_base import (
     KnowledgeBaseCreate, 
     KnowledgeBaseRead, 
     DocumentRead,
-    URLSitemapResponse,  # Add this schema
-    URLSubmit  # Add this schema
+    URLSitemapResponse,  
+    URLSubmit
 )
 
 router = APIRouter()
